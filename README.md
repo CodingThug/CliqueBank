@@ -1,66 +1,48 @@
-## Foundry
+# 🏦 Solidity Bank Contract – Full-Stack Smart Contract w/ Testing
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## Overview
 
-Foundry consists of:
+This project is a fully-functional **Solidity-based bank smart contract** built with:
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- Account creation via ETH payment
+- User information storage
+- ETH deposit/withdrawal support
+- Transaction logging
+- Loan request + approval logic
+- Foundry-based **fuzz testing**, **unit testing**, and **contract scripting**
 
-## Documentation
+---
 
-https://book.getfoundry.sh/
+## 🔧 Tech Stack
 
-## Usage
+- **Solidity** `^0.8.24`
+- **Foundry** – for compilation, testing, scripting
+- **VS Code** – IDE
+- **Git/GitHub** – version control and collaboration
 
-### Build
+---
 
-```shell
-$ forge build
-```
+## 💡 Features
 
-### Test
+### ✅ Core Features
 
-```shell
-$ forge test
-```
+- `setUserInfo`: Register an account by paying a small fee (`0.5 ether`)
+- `makeDeposit`: Deposit ETH into your account
+- `withdrawMyBalance`: Withdraw from your own balance
+- `withdraw`: Only owner can withdraw total contract balance
+- `updateUserInfo`: Update name, age, or marital status
+- `getUserInfo`: View public user info
+- `createUser`: Emits `UserRegistered` event
+- `makeDeposit`: Emits `AllTransactions` event
 
-### Format
+### 🔁 Loan Feature (with test)
 
-```shell
-$ forge fmt
-```
+- `requestLoan`: User requests a loan
+- `approveLoan`: Owner approves the loan
+- `getLoanRequest`: Fetch loan request metadata
 
-### Gas Snapshots
+---
 
-```shell
-$ forge snapshot
-```
+## 🧪 Foundry Testing
 
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+### 📁 Directory Structure

@@ -1,0 +1,96 @@
+function test_LiquidateLoanPartial() public {
+    // 1. Register a user and deposit collateral
+    address user = address(0xA1);
+    vm.prank(user);
+    bank.setUserInfo{value: 0.5 ether}(25, "Alice", false);
+
+    vm.prank(user);
+    bank.makeDeposit{value: 10 ether}();
+
+    // 2. Request and approve a loan
+    vm.prank(user);
+    bank.requestLoan{value: 0.01 ether}(5 ether, "Car");
+
+    vm.prank(owner);
+    bank.approveLoan(user, 0);
+
+    // 3. Manipulate health (simulate undercollateralization)
+    // This depends on your contract's logic; you may need to simulate price drop or similar
+
+    // 4. Partially liquidate the loan
+    uint256 partialAmount = 2 ether;
+    vm.prank(liquidator);
+    bank.liquidateLoan(user, 0, partialAmount);
+
+    // 5. Assert balances and loan status
+    (, , bool isApproved, , ) = bank.getLoanRequest(user, 0);
+    assertTrue(isApproved, "Loan should still be approved after partial liquidation");
+    assertEq(bank.userBalances(user), 3 ether, "User balance should reflect partial liquidation");
+}
+function test_RevertWhen_FeeWithdrawalTimelock() public {
+    // Assume a timelock of 1 day
+    uint256 timelock = 1 days;
+    bank.setFeeWithdrawalTimelock(timelock);
+
+    // Try to withdraw fees before timelock expires
+    vm.prank(owner);
+    vm.expectRevert(Bank.FeeWithdrawalTimelock.selector);
+    bank.withdrawFees();
+
+    // Fast-forward time
+    vm.warp(block.timestamp + timelock + 1);
+
+    // Withdraw fees after timelock
+    vm.prank(owner);
+    bank.withdrawFees();
+
+    // Assert that fee balance is zero
+    assertEq(bank.totalFeesCollected(), 0);
+}
+forge coverage --report lcov
+genhtml lcov.info --output-directory coverage
+
+function test_SafeTransferETHFailure() public {
+    // Deploy a contract that rejects ETH (e.g., with a fallback that reverts)
+    RejectETH rejector = new RejectETH();
+    vm.deal(address(bank), 1 ether);
+
+    // Try to withdraw to the rejecting contract
+    vm.prank(address(rejector));
+    vm.expectRevert(Bank.ETHTransferFailed.selector);
+    bank.withdrawMyBalance(0.01 ether);
+}
+
+// Helper contract
+contract RejectETH {
+    receive() external payable {
+        revert("No ETH accepted");
+    }
+}
+function testFuzz_LoanRequestEdge(uint256 amount, uint256 collateral) public {
+    // Ignore zero values
+    vm.assume(amount > 0 && collateral > 0);
+    vm.assume(amount < type(uint128).max); // Prevent overflow
+
+    // Register and deposit collateral
+    address user = address(uint160(uint256(keccak256(abi.encode(amount, collateral)))));
+    vm.deal(user, collateral + 1 ether);
+    vm.prank(user);
+    bank.setUserInfo{value: 0.5 ether}(30, "Bob", false);
+
+    vm.prank(user);
+    bank.makeDeposit{value: collateral}();
+
+    // Fuzz loan request
+    vm.prank(user);
+    bank.requestLoan{value: 0.01 ether}(amount, "Fuzzed Loan");
+
+    // Optionally: Approve and check
+    vm.prank(owner);
+    bank.approveLoan(user, 0);
+
+    // Assert loan is approved and user balance updated
+    (, , bool isApproved, , ) = bank.getLoanRequest(user, 0);
+    assertTrue(isApproved, "Loan should be approved");
+    assertEq(bank.userBalances(user), collateral + amount, "User balance should reflect loan");
+}
