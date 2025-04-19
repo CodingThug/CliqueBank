@@ -7,6 +7,7 @@ import "../lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 /// @title TheClique ETH Bank (Best)
 /// @notice Secure, scalable, decentralized bank for community: register, deposit, withdraw, and manage collateralized loans.
 /// @dev Optimized for Monad Testnet with governance and upgradeability readiness.
+
 contract Bank is ReentrancyGuard, AccessControl {
     // --- Roles ---
     bytes32 public constant LOAN_APPROVER_ROLE = keccak256("LOAN_APPROVER_ROLE");
@@ -36,6 +37,7 @@ contract Bank is ReentrancyGuard, AccessControl {
         uint256 unlockTimestamp;
         bool executed;
     }
+
     mapping(address => WithdrawalRequest) public withdrawalRequests;
 
     // --- User Data ---
@@ -110,9 +112,9 @@ contract Bank is ReentrancyGuard, AccessControl {
 
     // --- Modifiers ---
     modifier onlyRegistered() {
-    if (!hasAccount[msg.sender]) revert("User not registered");
-    _;
-}
+        if (!hasAccount[msg.sender]) revert("User not registered");
+        _;
+    }
 
     // --- Constructor ---
     constructor() {
@@ -122,11 +124,7 @@ contract Bank is ReentrancyGuard, AccessControl {
     }
 
     // --- User Registration ---
-    function setUserInfo(uint8 userAge, string memory userName, bool isUserMarried)
-        public
-        payable
-        nonReentrant
-    {
+    function setUserInfo(uint8 userAge, string memory userName, bool isUserMarried) public payable nonReentrant {
         if (hasAccount[msg.sender]) revert AlreadyRegistered();
         if (msg.value < CREATE_USER_PRICE) revert InsufficientRegistrationFee();
         if (userAge == 0 || userAge > 150) revert InvalidAge();
@@ -165,12 +163,7 @@ contract Bank is ReentrancyGuard, AccessControl {
     }
 
     // --- Loan System ---
-    function requestLoan(uint256 amountRequested, string memory purpose)
-        public
-        payable
-        onlyRegistered
-        nonReentrant
-    {
+    function requestLoan(uint256 amountRequested, string memory purpose) public payable onlyRegistered nonReentrant {
         if (msg.value < LOAN_REQUEST_FEE) revert InsufficientRegistrationFee();
         if (loans[msg.sender].length >= MAX_LOANS_PER_USER) revert MaxLoansReached();
         if (amountRequested > MAX_LOAN_AMOUNT) revert ExcessiveLoanAmount();
@@ -188,18 +181,20 @@ contract Bank is ReentrancyGuard, AccessControl {
         totalCollateralLocked += requiredCollateral;
 
         uint256 interest = (amountRequested * LOAN_INTEREST_RATE) / 100;
-        loans[msg.sender].push(Loan({
-            amount: amountRequested,
-            purpose: purpose,
-            isApproved: false,
-            isRejected: false,
-            timestamp: block.timestamp,
-            approvedBy: address(0),
-            isRepaid: false,
-            interest: interest,
-            dueTimestamp: block.timestamp + 30 days,
-            collateral: requiredCollateral
-        }));
+        loans[msg.sender].push(
+            Loan({
+                amount: amountRequested,
+                purpose: purpose,
+                isApproved: false,
+                isRejected: false,
+                timestamp: block.timestamp,
+                approvedBy: address(0),
+                isRepaid: false,
+                interest: interest,
+                dueTimestamp: block.timestamp + 30 days,
+                collateral: requiredCollateral
+            })
+        );
 
         totalFeesCollected += LOAN_REQUEST_FEE;
         emit LoanRequested(msg.sender, amountRequested, purpose, loans[msg.sender].length - 1);
@@ -364,7 +359,7 @@ contract Bank is ReentrancyGuard, AccessControl {
 
     // --- Internal Helpers ---
     function _safeTransferETH(address to, uint256 amount) internal {
-        (bool success, ) = to.call{value: amount}("");
+        (bool success,) = to.call{value: amount}("");
         if (!success) revert ETHTransferFailed();
     }
 

@@ -51,14 +51,14 @@ contract BankTest is Test {
     uint256 constant LIQUIDATOR_REWARD = 5;
 
     function setUp() public {
-    bank = new Bank();
-    vm.deal(address(bank), 10 ether); // Fund bank for loans
-    vm.deal(user, 200 ether); // Increased to cover 151.5 ETH deposit + fees
-    vm.deal(approver, 10 ether);
-    vm.deal(attacker, 10 ether);
-    bank.grantRole(bank.LOAN_APPROVER_ROLE(), approver);
-    reentrancyAttacker = new ReentrancyAttacker(bank);
-}
+        bank = new Bank();
+        vm.deal(address(bank), 10 ether); // Fund bank for loans
+        vm.deal(user, 200 ether); // Increased to cover 151.5 ETH deposit + fees
+        vm.deal(approver, 10 ether);
+        vm.deal(attacker, 10 ether);
+        bank.grantRole(bank.LOAN_APPROVER_ROLE(), approver);
+        reentrancyAttacker = new ReentrancyAttacker(bank);
+    }
 
     // Allow test contract to receive ETH
     receive() external payable {}
@@ -165,7 +165,18 @@ contract BankTest is Test {
         bank.makeDeposit{value: 1.5 ether}();
         bank.requestLoan{value: 0.01 ether}(1 ether, "Car");
         assertEq(bank.getUserLoanCount(user), 1);
-        (uint256 amount, string memory purpose, bool isApproved, bool isRejected, uint256 timestamp, address approvedBy, bool isRepaid, uint256 interest, uint256 dueTimestamp, uint256 collateral) = bank.getLoan(user, 0);
+        (
+            uint256 amount,
+            string memory purpose,
+            bool isApproved,
+            bool isRejected,
+            uint256 timestamp,
+            address approvedBy,
+            bool isRepaid,
+            uint256 interest,
+            uint256 dueTimestamp,
+            uint256 collateral
+        ) = bank.getLoan(user, 0);
         assertEq(amount, 1 ether);
         assertEq(purpose, "Car");
         assertFalse(isApproved);
@@ -184,13 +195,13 @@ contract BankTest is Test {
     }
 
     function test_RevertWhen_LoanExcessiveAmount() public {
-    vm.startPrank(user);
-    bank.setUserInfo{value: 0.5 ether}(25, "Alice", false);
-    bank.makeDeposit{value: 151.5 ether}(); // Enough for 101 ETH loan
-    vm.expectRevert(Bank.ExcessiveLoanAmount.selector);
-    bank.requestLoan{value: 0.01 ether}(101 ether, "Car");
-    vm.stopPrank();
-}
+        vm.startPrank(user);
+        bank.setUserInfo{value: 0.5 ether}(25, "Alice", false);
+        bank.makeDeposit{value: 151.5 ether}(); // Enough for 101 ETH loan
+        vm.expectRevert(Bank.ExcessiveLoanAmount.selector);
+        bank.requestLoan{value: 0.01 ether}(101 ether, "Car");
+        vm.stopPrank();
+    }
 
     function test_RevertWhen_LoanInsufficientCollateral() public {
         vm.startPrank(user);
@@ -214,28 +225,28 @@ contract BankTest is Test {
     }
 
     function test_ApproveLoan() public {
-    vm.prank(user);
-    bank.setUserInfo{value: 0.5 ether}(25, "Alice", false);
+        vm.prank(user);
+        bank.setUserInfo{value: 0.5 ether}(25, "Alice", false);
 
-    vm.prank(user);
-    bank.makeDeposit{value: 1.5 ether}();
+        vm.prank(user);
+        bank.makeDeposit{value: 1.5 ether}();
 
-    vm.prank(user);
-    bank.requestLoan{value: 0.01 ether}(1 ether, "Car");
+        vm.prank(user);
+        bank.requestLoan{value: 0.01 ether}(1 ether, "Car");
 
-    console.log("Bank balance before approve:", address(bank).balance);
+        console.log("Bank balance before approve:", address(bank).balance);
 
-    vm.prank(approver);
-    bank.approveLoan(user, 0);
+        vm.prank(approver);
+        bank.approveLoan(user, 0);
 
-    // Correct destructuring — skip all but the booleans we care about
-    (,, bool isApproved, , , , bool isRepaid, , ,) = bank.getLoan(user, 0);
+        // Correct destructuring — skip all but the booleans we care about
+        (,, bool isApproved,,,, bool isRepaid,,,) = bank.getLoan(user, 0);
 
-    assertTrue(isApproved, "Loan should be approved");
-    assertFalse(isRepaid, "Loan should not be marked repaid");
-    assertEq(bank.userBalances(user), 1 ether, "User should have loan amount");
-    assertEq(bank.userCollateral(user), 1.5 ether, "Collateral should remain locked");
-}
+        assertTrue(isApproved, "Loan should be approved");
+        assertFalse(isRepaid, "Loan should not be marked repaid");
+        assertEq(bank.userBalances(user), 1 ether, "User should have loan amount");
+        assertEq(bank.userCollateral(user), 1.5 ether, "Collateral should remain locked");
+    }
 
     function test_RevertWhen_ApproveNonApprover() public {
         vm.prank(user);
@@ -382,24 +393,24 @@ contract BankTest is Test {
 
     // --- Security Tests ---
     function test_RevertWhen_ReentrancyAttack() public {
-    bank = new Bank();
-    vm.deal(address(bank), 100 ether);
-    bank.grantRole(bank.LOAN_APPROVER_ROLE(), approver);
-    reentrancyAttacker = new ReentrancyAttacker(bank);
-    vm.deal(address(reentrancyAttacker), 20 ether);
-    console.log("ReentrancyAttacker balance before setUserInfo:", address(reentrancyAttacker).balance);
-    vm.prank(address(reentrancyAttacker));
-    bank.setUserInfo{value: 0.5 ether}(25, "Mallory", false);
-    console.log("Registered before deposit:", bank.hasAccount(address(reentrancyAttacker)));
-    vm.prank(address(reentrancyAttacker));
-    bank.makeDeposit{value: 3 ether}();
-    console.log("Registered after deposit:", bank.hasAccount(address(reentrancyAttacker)));
-    console.log("ReentrancyAttacker balance in bank:", bank.userBalances(address(reentrancyAttacker)));
-    console.log("Bank balance before attack:", address(bank).balance);
-    vm.prank(address(reentrancyAttacker));
-    vm.expectRevert(Bank.ETHTransferFailed.selector);
-    reentrancyAttacker.attack{value: 0.05 ether}();
-}
+        bank = new Bank();
+        vm.deal(address(bank), 100 ether);
+        bank.grantRole(bank.LOAN_APPROVER_ROLE(), approver);
+        reentrancyAttacker = new ReentrancyAttacker(bank);
+        vm.deal(address(reentrancyAttacker), 20 ether);
+        console.log("ReentrancyAttacker balance before setUserInfo:", address(reentrancyAttacker).balance);
+        vm.prank(address(reentrancyAttacker));
+        bank.setUserInfo{value: 0.5 ether}(25, "Mallory", false);
+        console.log("Registered before deposit:", bank.hasAccount(address(reentrancyAttacker)));
+        vm.prank(address(reentrancyAttacker));
+        bank.makeDeposit{value: 3 ether}();
+        console.log("Registered after deposit:", bank.hasAccount(address(reentrancyAttacker)));
+        console.log("ReentrancyAttacker balance in bank:", bank.userBalances(address(reentrancyAttacker)));
+        console.log("Bank balance before attack:", address(bank).balance);
+        vm.prank(address(reentrancyAttacker));
+        vm.expectRevert(Bank.ETHTransferFailed.selector);
+        reentrancyAttacker.attack{value: 0.05 ether}();
+    }
 
     // --- Fuzz Tests ---
     function testFuzz_Deposit(uint256 amount) public {

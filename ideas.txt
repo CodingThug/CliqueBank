@@ -94,3 +94,6 @@ function testFuzz_LoanRequestEdge(uint256 amount, uint256 collateral) public {
     assertTrue(isApproved, "Loan should be approved");
     assertEq(bank.userBalances(user), collateral + amount, "User balance should reflect loan");
 }
+
+
+SHA256:c9M18BWPaW7yTC+byLTIhT3nVJUVSTvLV4YvaMP2W0U codingthuglocalhost@gmail.com
