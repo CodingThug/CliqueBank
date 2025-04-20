@@ -96,4 +96,3 @@ function testFuzz_LoanRequestEdge(uint256 amount, uint256 collateral) public {
 }
 
 
-SHA256:c9M18BWPaW7yTC+byLTIhT3nVJUVSTvLV4YvaMP2W0U codingthuglocalhost@gmail.com
