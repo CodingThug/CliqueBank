@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="./accounts.js" defer></script>
+  <title>Monad Bank DApp</title>
+  <style>
+    :root {
+      --primary: #8247e5;
+      --primary-dark: #5c2db2;
+      --accent: #ffcf33;
+      --bg: #f5f3ff;
+      --text: #1a1a1a;
+      --white: #fff;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    header {
+      background-color: var(--primary);
+      color: var(--white);
+      padding: 1.5rem;
+      width: 100%;
+      text-align: center;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background-color: var(--white);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: var(--white);
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .status {
+      font-size: 0.95rem;
+      margin-top: 1rem;
+      color: var(--primary-dark);
+      text-align: center;
+    }
+
+    @media screen and (max-width: 480px) {
+      .container {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Bank for the Clique</h1>
+  </header>
+
+  <div class="container">
+
+    
+    <form id="registerForm">
+      <button id="connectBtn">🔌 Connect Wallet</button>
+      <label for="name">Name</label>
+      <input type="text" id="name" placeholder="Enter your name" required />
+
+      <label for="age">Age</label>
+      <input type="number" id="age" placeholder="Enter your age" required />
+
+      <label for="married">Marital Status</label>
+      <select id="married">
+        <option value="true">Married</option>
+        <option value="false">Single</option>
+      </select>
+
+      <button type="submit">Register</button>
+    </form>
+
+    <form id="depositForm">
+      <label for="amount">Deposit Amount (ETH)</label>
+      <input type="number" id="amount" placeholder="Amount to deposit" required />
+
+      <button type="submit">Make Deposit</button>
+    </form>
+
+    <div class="status" id="status"></div>
+
+    <form id="withdrawForm">
+      <label for="withdrawAmount">Withdraw Amount (ETH)</label>
+      <input type="number" id="withdrawAmount" placeholder="Amount to withdraw" required />
+      <button type="submit">Withdraw</button>
+    </form>
+  </div>
+  
+  
+  
+</body>
+</html>
